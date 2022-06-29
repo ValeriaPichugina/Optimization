@@ -27,6 +27,7 @@ def unnamed_inversions(A):
         B = B[:pos] + B[(pos+1):]
     print(res)
 
+
 @njit
 def unnamed_inversions_numba(A):
     l = len(A)
@@ -69,13 +70,13 @@ def merge_inversions(array):
     return [merged, count]
 
 
-@jit
-def merge_inversions_numba(array):
+@jit()
+def merge_inversions_numba(array:list) -> list:
     if len(array) <= 1:
         return array, 0
     middle = len(array) // 2
-    left, inv_left = merge_inversions(array[:middle])
-    right, inv_right = merge_inversions(array[middle:])
+    [left, inv_left] = merge_inversions_numba(array[:middle])
+    [right, inv_right] = merge_inversions_numba(array[middle:])
 
     result = list()
     i, j = 0, 0
@@ -95,7 +96,7 @@ def merge_inversions_numba(array):
     count = inv_count
 
     count += (inv_left + inv_right)
-    return merged, count
+    return list(merged, count)
 
 def get_inv_count(arr):
     inv_count = 0
@@ -150,43 +151,63 @@ def generate_data(leng):
 
 
 if __name__ == '__main__':
-
-    data_len = 10000
+    # Наивный алгоритм
+  
+    data_len = 5000
     [B, B_n] = generate_data(data_len)
+  
     t = Timer(lambda: stupid_inversions(B))
     t1 = t.timeit(number=1)
     print("Инверсии наивным алгоритмом. Массив длиной ", data_len, " значений. Без оптимизации: ", t1)
+  
     t = Timer(lambda: stupid_inversions_numba(B_n))
     t2 = t.timeit(number=1)
     print("Инверсии наивным алгоритмом. Массив длиной ", data_len, " значений. С оптимизацией: ", t2)
+  
     print("Ускорение в ", t1/t2, " раз.")
 
-    data_len = 20000
+  
+    # Алгоритм с удалениями
+    data_len = 5000
     [B, B_n] = generate_data(data_len)
+  
     t = Timer(lambda: unnamed_inversions(B))
     t1 = t.timeit(number=1)
     print("Инверсии алгоритмом с удалением. Массив длиной ", data_len, " значений Без оптимизации: ", t1)
+  
     t = Timer(lambda: unnamed_inversions_numba(B_n))
     t2 = t.timeit(number=1)
     print("Инверсии алгоритмом с удалением. Массив длиной ", data_len, " значений. С оптимизацией: ", t2)
+  
     print("Ускорение в ", t1 / t2, " раз.")
 
-    data_len = 20000
+  
+    # Алгоритм сортировки вставками
+    data_len = 5000
     [B, B_n] = generate_data(data_len)
+  
     t = Timer(lambda: unnamed_inversions(B))
     t1 = t.timeit(number=1)
     print("Инверсии с сортировкой вставками. Массив длиной ", data_len, " значений. Без оптимизации: ", t1)
+  
     t = Timer(lambda: unnamed_inversions_numba(B_n))
     t2 = t.timeit(number=1)
     print("Инверсии сортировкой вставками. Массив длиной ", data_len, " значений. С оптимизацией: ", t2)
+  
     print("Ускорение в ", t1 / t2, " раз.")
 
-    data_len = 1200000
+  
+    # Алгоритм дерева Фенвика 
+    data_len = 500000
     [B, B_n] = generate_data(data_len)
+  
     t = Timer(lambda: fenwick_inversions(B))
     t1 = t.timeit(number=1)
     print("Инверсии деревом Фенвика. Массив длиной ", data_len, " значений. Без оптимизации: ", t1)
+  
     t = Timer(lambda: fenwick_inversions_numba(B_n))
     t2 = t.timeit(number=1)
     print("Инверсии деревом Фенвика. Массив длиной ", data_len, " значений. С оптимизацией: ", t2)
+  
     print("Ускорение в ", t1/t2, " раз.")
+
