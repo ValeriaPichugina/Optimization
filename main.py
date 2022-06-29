@@ -1,5 +1,6 @@
 import numba as nb
 from numba import njit
+from numba import jit
 from numba import int64
 import random
 from timeit import Timer
@@ -39,6 +40,62 @@ def unnamed_inversions_numba(A):
         B = B[:pos] + B[(pos+1):]
     print(res)
 
+
+def merge_inversions(array):
+    if len(array) <= 1:
+        return array, 0
+    middle = len(array) // 2
+    [left, inv_left] = merge_inversions(array[:middle])
+    [right, inv_right] = merge_inversions(array[middle:])
+
+    result = list()
+    i, j = 0, 0
+    inv_count = 0
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            result.append(left[i])
+            i += 1
+        else:
+            result.append(right[j])
+            j += 1
+            inv_count += (len(left) - i)
+    result += left[i:]
+    result += right[j:]
+
+    merged = result
+    count = inv_count
+
+    count += (inv_left + inv_right)
+    return [merged, count]
+
+
+@jit
+def merge_inversions_numba(array):
+    if len(array) <= 1:
+        return array, 0
+    middle = len(array) // 2
+    left, inv_left = merge_inversions(array[:middle])
+    right, inv_right = merge_inversions(array[middle:])
+
+    result = list()
+    i, j = 0, 0
+    inv_count = 0
+    while i < len(left) and j < len(right):
+        if left[i] <= right[j]:
+            result.append(left[i])
+            i += 1
+        else:
+            result.append(right[j])
+            j += 1
+            inv_count += (len(left) - i)
+    result += left[i:]
+    result += right[j:]
+
+    merged = result
+    count = inv_count
+
+    count += (inv_left + inv_right)
+    return merged, count
 
 def get_inv_count(arr):
     inv_count = 0
@@ -108,10 +165,20 @@ if __name__ == '__main__':
     [B, B_n] = generate_data(data_len)
     t = Timer(lambda: unnamed_inversions(B))
     t1 = t.timeit(number=1)
-    print("Инверсии наивным алгоритмом. Массив длиной ", data_len, " значений Без оптимизации: ", t1)
+    print("Инверсии алгоритмом с удалением. Массив длиной ", data_len, " значений Без оптимизации: ", t1)
     t = Timer(lambda: unnamed_inversions_numba(B_n))
     t2 = t.timeit(number=1)
-    print("Инверсии наивным алгоритмом. Массив длиной ", data_len, " значений. С оптимизацией: ", t2)
+    print("Инверсии алгоритмом с удалением. Массив длиной ", data_len, " значений. С оптимизацией: ", t2)
+    print("Ускорение в ", t1 / t2, " раз.")
+
+    data_len = 20000
+    [B, B_n] = generate_data(data_len)
+    t = Timer(lambda: unnamed_inversions(B))
+    t1 = t.timeit(number=1)
+    print("Инверсии с сортировкой вставками. Массив длиной ", data_len, " значений. Без оптимизации: ", t1)
+    t = Timer(lambda: unnamed_inversions_numba(B_n))
+    t2 = t.timeit(number=1)
+    print("Инверсии сортировкой вставками. Массив длиной ", data_len, " значений. С оптимизацией: ", t2)
     print("Ускорение в ", t1 / t2, " раз.")
 
     data_len = 1200000
